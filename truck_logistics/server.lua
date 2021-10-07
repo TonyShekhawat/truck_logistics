@@ -1,16 +1,4 @@
---[[
-   _____                                         _                _     _                __      __  _   _____             _____ 
-  / ____|                                       | |              | |   | |               \ \    / / (_) |  __ \           / ____|
- | |        ___    _ __   __   __   ___   _ __  | |_    ___    __| |   | |__    _   _     \ \  / /   _  | |__) |  _   _  | (___  
- | |       / _ \  | '_ \  \ \ / /  / _ \ | '__| | __|  / _ \  / _` |   | '_ \  | | | |     \ \/ /   | | |  _  /  | | | |  \___ \ 
- | |____  | (_) | | | | |  \ V /  |  __/ | |    | |_  |  __/ | (_| |   | |_) | | |_| |      \  /    | | | | \ \  | |_| |  ____) |
-  \_____|  \___/  |_| |_|   \_/    \___| |_|     \__|  \___|  \__,_|   |_.__/   \__, |       \/     |_| |_|  \_\  \__,_| |_____/ 
-                                                                                 __/ |                                           
-                                                                                |___/                                            
--- Converted by ViRuS for QBCore Framework - https://github.com/qbcore-framework --
-]]
-QBCore = nil
-TriggerEvent('QBCore:GetObject', function(obj) QBCore = obj end)
+local QBCore = exports['qb-core']:GetCoreObject()
 
 local isOpen = {}
 local debug_cooldown = {}
@@ -53,20 +41,20 @@ Citizen.CreateThread(function()
 
 		if contract_type == 1 then truck = nil end
 	
-		local sql = exports['ghmattimysql']:execute("SELECT COUNT(contract_id) as qtd FROM trucker_available_contracts", function(result)
+		local sql = exports.oxmysql:fetch("SELECT COUNT(contract_id) as qtd FROM trucker_available_contracts", function(result)
 		
 			local count = result[1].qtd;
 			
 			if count >= Config.contratos.max_contratos_ativos then
-				local sql = exports['ghmattimysql']:execute("SELECT MIN(contract_id) as min FROM trucker_available_contracts", function(sql2)
+				local sql = exports.oxmysql:fetch("SELECT MIN(contract_id) as min FROM trucker_available_contracts", function(sql2)
 				local min = sql2[1].min;
 				
-				exports['ghmattimysql']:execute("DELETE FROM `trucker_available_contracts` WHERE contract_id = @contract_id;", {['@contract_id'] = min});
+				exports.oxmysql:insert("DELETE FROM `trucker_available_contracts` WHERE contract_id = @contract_id;", {['@contract_id'] = min});
 			
 				end)
 			end
 
-			exports['ghmattimysql']:execute("INSERT INTO `trucker_available_contracts` (contract_type, contract_name, coords_index, price_per_km, cargo_type, fragile, valuable, fast, truck, trailer) VALUES (@contract_type, @contract_name, @coords_index, @price_per_km, @cargo_type, @fragile, @valuable, @fast, @truck, @trailer);", {['@contract_type'] = contract_type, ['@contract_name'] = contract_name, ['@coords_index'] = coords_index, ['@price_per_km'] = (price_per_km*bonus), ['@cargo_type'] = cargo_type, ['@fragile'] = fragile, ['@valuable'] = valuable, ['@fast'] = fast, ['@truck'] = truck, ['@trailer'] = trailer});
+			exports.oxmysql:insert("INSERT INTO `trucker_available_contracts` (contract_type, contract_name, coords_index, price_per_km, cargo_type, fragile, valuable, fast, truck, trailer) VALUES (@contract_type, @contract_name, @coords_index, @price_per_km, @cargo_type, @fragile, @valuable, @fast, @truck, @trailer);", {['@contract_type'] = contract_type, ['@contract_name'] = contract_name, ['@coords_index'] = coords_index, ['@price_per_km'] = (price_per_km*bonus), ['@cargo_type'] = cargo_type, ['@fragile'] = fragile, ['@valuable'] = valuable, ['@fast'] = fast, ['@truck'] = truck, ['@trailer'] = trailer});
 			
 		end)
 
@@ -116,20 +104,20 @@ Citizen.CreateThread(function()
 
 		if contract_type == 1 then truck = nil end
 
-			local sql = exports['ghmattimysql']:execute("SELECT COUNT(driver_id) as qtd FROM trucker_drivers WHERE user_id IS NULL", function (result)
+			local sql = exports.oxmysql:fetch("SELECT COUNT(driver_id) as qtd FROM trucker_drivers WHERE user_id IS NULL", function (result)
 				
 				local count = result[1].qtd;
 				
 				if count >= Config.motoristas.max_motoristas_ativos then
-					local sql = exports['ghmattimysql']:execute("SELECT MIN(driver_id) as min FROM trucker_drivers WHERE user_id IS NULL", function(sql)
+					local sql = exports.oxmysql:fetch("SELECT MIN(driver_id) as min FROM trucker_drivers WHERE user_id IS NULL", function(sql)
 					local min = sql[1].min;
 					
 				
-					exports['ghmattimysql']:execute("DELETE FROM `trucker_drivers` WHERE driver_id = @driver_id;", {['@driver_id'] = min});
+					exports.oxmysql:execute("DELETE FROM `trucker_drivers` WHERE driver_id = @driver_id;", {['@driver_id'] = min});
 					end)
 				end
 			end)
-		exports['ghmattimysql']:execute("INSERT INTO `trucker_drivers` (user_id, name, product_type, distance, fragile, valuable, fast, price, price_per_km, img) VALUES (NULL, @name, @product_type, @distance, @fragile, @valuable, @fast, @price, @price_per_km, @img);", {['@name'] = name, ['@product_type'] = product_type, ['@distance'] = distance, ['@fragile'] = fragile, ['@valuable'] = valuable, ['@fast'] = fast, ['@price'] = price, ['@price_per_km'] = price_per_km, ['@img'] = driver.img});
+		exports.oxmysql:insert("INSERT INTO `trucker_drivers` (user_id, name, product_type, distance, fragile, valuable, fast, price, price_per_km, img) VALUES (NULL, @name, @product_type, @distance, @fragile, @valuable, @fast, @price, @price_per_km, @img);", {['@name'] = name, ['@product_type'] = product_type, ['@distance'] = distance, ['@fragile'] = fragile, ['@valuable'] = valuable, ['@fast'] = fast, ['@price'] = price, ['@price_per_km'] = price_per_km, ['@img'] = driver.img});
 	
 		local users = QBCore.Functions.GetPlayers()
 		for k,v in pairs(users) do
@@ -147,7 +135,7 @@ end)
 Citizen.CreateThread(function()
 	Citizen.Wait(10000)
 	while true do 
-		local sql = exports['ghmattimysql']:execute("SELECT * FROM `trucker_drivers` ", function(result)
+		local sql = exports.oxmysql:fetch("SELECT * FROM `trucker_drivers` ", function(result)
 
 			local data = result
 			for k,v in pairs(data) do
@@ -158,9 +146,9 @@ Citizen.CreateThread(function()
 						amount = amount + (v.product_type+v.distance+v.fragile+v.valuable+v.fast)*(amount*(Config.trabalhos.porcentagem_bonus_habilidades/100))
 						giveTruckerMoney(v.user_id,amount)
 					else
-						exports['ghmattimysql']:execute("UPDATE `trucker_drivers` SET user_id = NULL WHERE driver_id = @driver_id", {['@driver_id'] = v.driver_id});
+						exports.oxmysql:execute("UPDATE `trucker_drivers` SET user_id = NULL WHERE driver_id = @driver_id", {['@driver_id'] = v.driver_id});
 						
-						exports['ghmattimysql']:execute("UPDATE `trucker_trucks` SET driver = NULL WHERE driver = @driver_id", {['@driver_id'] = v.driver_id});
+						exports.oxmysql:execute("UPDATE `trucker_trucks` SET driver = NULL WHERE driver = @driver_id", {['@driver_id'] = v.driver_id});
 						if source then
 							TriggerClientEvent("QBCore:Notify", source, Lang[Config.lang]['driver_failed']:format(v.name), "error")
 						end
@@ -185,22 +173,22 @@ end)
 Citizen.CreateThread(function()
 	Citizen.Wait(10000)
 	while true do
-		local data = exports['ghmattimysql']:execute("SELECT * FROM trucker_loans", function(data)
+		local data = exports.oxmysql:fetch("SELECT * FROM trucker_loans", function(data)
 			for k,v in pairs(data) do
 				if v.timer + Config.emprestimos.cooldown < os.time() then
 					local source = QBCore.Functions.GetPlayerByCitizenId(tonumber(v.user_id))
 					if tryGetTruckerMoney(v.user_id,v.day_cost) then
 						local new_loan = v.remaining_amount - v.taxes_on_day
 						if new_loan > 0 then
-							exports['ghmattimysql']:execute("UPDATE `trucker_loans` SET remaining_amount = @remaining_amount, timer = @timer WHERE id = @id", {['remaining_amount'] = new_loan, ['timer'] = os.time(), ['@id'] = v.id});
+							exports.oxmysql:execute("UPDATE `trucker_loans` SET remaining_amount = @remaining_amount, timer = @timer WHERE id = @id", {['remaining_amount'] = new_loan, ['timer'] = os.time(), ['@id'] = v.id});
 						else
-							exports['ghmattimysql']:execute("DELETE FROM `trucker_loans` WHERE id = @id;", {['@id'] = v.id});
+							exports.oxmysql:execute("DELETE FROM `trucker_loans` WHERE id = @id;", {['@id'] = v.id});
 						end
 					else
 						if source then
 							TriggerClientEvent("QBCore:Notify",source, Lang[Config.lang]['no_loan_money'], "primary")
 						else
-							exports['ghmattimysql']:execute("UPDATE `trucker_users` SET loan_notify = 1 WHERE user_id = @user_id", {['@user_id'] = v.user_id});
+							exports.oxmysql:execute("UPDATE `trucker_users` SET loan_notify = 1 WHERE user_id = @user_id", {['@user_id'] = v.user_id});
 						end
 					end
 					if source then
@@ -246,9 +234,9 @@ AddEventHandler("truck_logistics:startContract",function(data)
 		local xPlayer = QBCore.Functions.GetPlayer(source)
 		local user_id = xPlayer.PlayerData.citizenid
 		if user_id then
-			local query = exports['ghmattimysql']:execute("SELECT * FROM `trucker_available_contracts` WHERE contract_id = @id",{['@id'] = id}, function(query)
+			local query = exports.oxmysql:fetch("SELECT * FROM `trucker_available_contracts` WHERE contract_id = @id",{['@id'] = id}, function(query)
 				if query and query[1] then
-					query_users = exports['ghmattimysql']:execute("SELECT * FROM `trucker_users` WHERE user_id = @user_id", {['@user_id'] = user_id}, function(query_users)
+					query_users = exports.oxmysql:fetch("SELECT * FROM `trucker_users` WHERE user_id = @user_id", {['@user_id'] = user_id}, function(query_users)
 						if query_users and query_users[1] then
 							if tonumber(query_users[1].product_type) >= tonumber(query[1].cargo_type) then
 								if tonumber(query_users[1].fragile) >= tonumber(query[1].fragile) then
@@ -260,7 +248,7 @@ AddEventHandler("truck_logistics:startContract",function(data)
 													TriggerClientEvent("truck_logistics:startContract",source,query[1],distance,reward,{})
 												else
 													-- Checa se tem caminhão
-													query_truck = exports['ghmattimysql']:execute("SELECT * FROM `trucker_trucks` WHERE driver = 0 AND user_id = @user_id", {['@user_id'] = user_id}, function(query_truck)
+													query_truck = exports.oxmysql:fetch("SELECT * FROM `trucker_trucks` WHERE driver = 0 AND user_id = @user_id", {['@user_id'] = user_id}, function(query_truck)
 														if query_truck and query_truck[1] then
 															TriggerClientEvent("truck_logistics:startContract",source,query[1],distance,reward,query_truck[1])
 														else
@@ -302,7 +290,7 @@ AddEventHandler("truck_logistics:spawnTruck",function(truck_id)
 		local xPlayer = QBCore.Functions.GetPlayer(source)
 		local user_id = xPlayer.PlayerData.citizenid
 		if user_id then
-			exports['ghmattimysql']:execute("SELECT * FROM `trucker_trucks` WHERE truck_id = @truck_id" ,{['@truck_id'] = tonumber(truck_id)}, function(result)
+			exports.oxmysql:fetch("SELECT * FROM `trucker_trucks` WHERE truck_id = @truck_id" ,{['@truck_id'] = tonumber(truck_id)}, function(result)
 				if result and result[1] then
 					TriggerClientEvent("truck_logistics:spawnTruck",source, result[1])
 				end
@@ -318,10 +306,10 @@ AddEventHandler("truck_logistics:upgradeSkill",function(data)
 	local xPlayer = QBCore.Functions.GetPlayer(source)
 	local user_id = xPlayer.PlayerData.citizenid
 	if user_id then
-		local sql = exports['ghmattimysql']:execute("SELECT * FROM `trucker_users` WHERE user_id = @user_id", {['@user_id'] = user_id}, function(result)
+		local sql = exports.oxmysql:fetch("SELECT * FROM `trucker_users` WHERE user_id = @user_id", {['@user_id'] = user_id}, function(result)
 			local query = result[1];
 			if query.skill_points >= (data.value - query[data.id]) then
-				exports['ghmattimysql']:execute("UPDATE `trucker_users` SET "..data.id.." = @value, skill_points = @skill_points WHERE user_id = @user_id", {['@user_id'] = user_id, ['@value'] = data.value, ['@skill_points'] = (query.skill_points - (data.value - query[data.id]))});
+				exports.oxmysql:execute("UPDATE `trucker_users` SET "..data.id.." = @value, skill_points = @skill_points WHERE user_id = @user_id", {['@user_id'] = user_id, ['@value'] = data.value, ['@skill_points'] = (query.skill_points - (data.value - query[data.id]))});
 				TriggerClientEvent("QBCore:Notify", source, Lang[Config.lang]['upgraded_skill'], "success")
 				openUI(source,true)
 			else
@@ -337,13 +325,13 @@ AddEventHandler("truck_logistics:repairTruck",function(item)
 	local xPlayer = QBCore.Functions.GetPlayer(source)
 	local user_id = xPlayer.PlayerData.citizenid
 	if user_id then
-		local sql = exports['ghmattimysql']:execute("SELECT * FROM `trucker_trucks` WHERE user_id = @user_id AND driver = 0", {['@user_id'] = user_id}, function(result)
+		local sql = exports.oxmysql:fetch("SELECT * FROM `trucker_trucks` WHERE user_id = @user_id AND driver = 0", {['@user_id'] = user_id}, function(result)
 			local query = result[1];
 			if query then
 				local amount = math.floor((100-(tonumber(query[item])/10)) * Config.valor_reparo[item])
 				if amount > 0 then
 					if tryGetTruckerMoney(user_id,amount) then
-						exports['ghmattimysql']:execute("UPDATE `trucker_trucks` SET "..item.." = 1000 WHERE user_id = @user_id AND driver = 0", {['@user_id'] = user_id});
+						exports.oxmysql:execute("UPDATE `trucker_trucks` SET "..item.." = 1000 WHERE user_id = @user_id AND driver = 0", {['@user_id'] = user_id});
 						TriggerClientEvent("QBCore:Notify",source, Lang[Config.lang]['repaired'], "success")
 						openUI(source,true)
 					else
@@ -366,7 +354,7 @@ AddEventHandler("truck_logistics:buyTruck",function(data)
 	local user_id = xPlayer.PlayerData.citizenid
 	if user_id then
 		if tryGetTruckerMoney(user_id,tonumber(data.price)) then
-			exports['ghmattimysql']:execute("INSERT INTO `trucker_trucks` (user_id, truck_name, driver) VALUES (@user_id, @name, NULL);", {['@user_id'] = user_id, ['@name'] = data.truck_name});
+			exports.oxmysql:insert("INSERT INTO `trucker_trucks` (user_id, truck_name, driver) VALUES (@user_id, @name, NULL);", {['@user_id'] = user_id, ['@name'] = data.truck_name});
 			TriggerClientEvent("QBCore:Notify",source,Lang[Config.lang]['bought'], "success")
 			SendWebhookMessage(Config.webhook,Lang[Config.lang]['logs_buytruck']:format(data.truck_name,data.price,user_id..os.date("\n["..Lang[Config.lang]['logs_date'].."]: %d/%m/%Y ["..Lang[Config.lang]['logs_hour'].."]: %H:%M:%S")))
 			openUI(source,true)
@@ -384,10 +372,10 @@ AddEventHandler("truck_logistics:sellTruck",function(data)
 		local xPlayer = QBCore.Functions.GetPlayer(source)
 		local user_id = xPlayer.PlayerData.citizenid
 		if user_id then
-			local sql = exports['ghmattimysql']:execute("SELECT * FROM `trucker_trucks` WHERE truck_id = @truck_id", {['@truck_id'] = data.truck_id}, function(result)
+			local sql = exports.oxmysql:fetch("SELECT * FROM `trucker_trucks` WHERE truck_id = @truck_id", {['@truck_id'] = data.truck_id}, function(result)
 				local query = result[1];
 				if query then 
-					exports['ghmattimysql']:execute("DELETE FROM `trucker_trucks` WHERE truck_id = @truck_id;", {['@truck_id'] = data.truck_id});
+					exports.oxmysql:execute("DELETE FROM `trucker_trucks` WHERE truck_id = @truck_id;", {['@truck_id'] = data.truck_id});
 					local amount = math.floor(tonumber(Config.concessionaria[data.truck_name].price * Config.multiplicador_venda))
 					giveTruckerMoney(user_id,amount)
 					TriggerClientEvent("QBCore:Notify",source,Lang[Config.lang]['sold'], "success")
@@ -406,14 +394,14 @@ AddEventHandler("truck_logistics:hireDriver",function(driver_id)
 	local xPlayer = QBCore.Functions.GetPlayer(source)
 	local user_id = xPlayer.PlayerData.citizenid
 	if user_id then
-		local sql = exports['ghmattimysql']:execute("SELECT COUNT(driver_id) as qtd FROM trucker_drivers WHERE user_id = @user_id", {['@user_id'] = user_id}, function(result)
+		local sql = exports.oxmysql:fetch("SELECT COUNT(driver_id) as qtd FROM trucker_drivers WHERE user_id = @user_id", {['@user_id'] = user_id}, function(result)
 			local count = result[1].qtd;
 		
 			if count <= Config.motoristas.max_motoristas_por_player then
-				local sql = exports['ghmattimysql']:execute("SELECT price FROM trucker_drivers WHERE driver_id = @driver_id", {['@driver_id'] = driver_id}, function(result2)
+				local sql = exports.oxmysql:fetch("SELECT price FROM trucker_drivers WHERE driver_id = @driver_id", {['@driver_id'] = driver_id}, function(result2)
 					local query = result2[1];
 					if tryGetTruckerMoney(user_id,query.price) then
-						exports['ghmattimysql']:execute("UPDATE `trucker_drivers` SET user_id = @user_id WHERE driver_id = @driver_id", {['@user_id'] = user_id, ['@driver_id'] = driver_id});
+						exports.oxmysql:execute("UPDATE `trucker_drivers` SET user_id = @user_id WHERE driver_id = @driver_id", {['@user_id'] = user_id, ['@driver_id'] = driver_id});
 						TriggerClientEvent("QBCore:Notify",source, Lang[Config.lang]['hired'], "success")
 						openUI(source,true)
 					else
@@ -433,8 +421,8 @@ AddEventHandler("truck_logistics:fireDriver",function(driver_id)
 	local xPlayer = QBCore.Functions.GetPlayer(source)
 	local user_id = xPlayer.PlayerData.citizenid
 	if user_id then
-		exports['ghmattimysql']:execute("UPDATE `trucker_drivers` SET user_id = NULL WHERE driver_id = @driver_id", {['@driver_id'] = driver_id});
-		exports['ghmattimysql']:execute("UPDATE `trucker_trucks` SET driver = NULL WHERE driver = @driver_id", {['@driver_id'] = driver_id});
+		exports.oxmysql:execute("UPDATE `trucker_drivers` SET user_id = NULL WHERE driver_id = @driver_id", {['@driver_id'] = driver_id});
+		exports.oxmysql:execute("UPDATE `trucker_trucks` SET driver = NULL WHERE driver = @driver_id", {['@driver_id'] = driver_id});
 		TriggerClientEvent("QBCore:Notify",source, Lang[Config.lang]['fired'], "success")
 		openUI(source,true)
 	end
@@ -447,9 +435,9 @@ AddEventHandler("truck_logistics:setDriver",function(data)
 	local user_id = xPlayer.PlayerData.citizenid
 	if user_id then
 		if tonumber(data.driver_id) ~= 0 then
-		exports['ghmattimysql']:execute("UPDATE `trucker_trucks` SET driver = NULL WHERE driver = @driver_id", {['@driver_id'] = data.driver_id});
+		exports.oxmysql:execute("UPDATE `trucker_trucks` SET driver = NULL WHERE driver = @driver_id", {['@driver_id'] = data.driver_id});
 		end
-		exports['ghmattimysql']:execute("UPDATE `trucker_trucks` SET driver = @driver_id WHERE truck_id = @truck_id", {['@driver_id'] = data.driver_id, ['@truck_id'] = data.truck_id});
+		exports.oxmysql:execute("UPDATE `trucker_trucks` SET driver = @driver_id WHERE truck_id = @truck_id", {['@driver_id'] = data.driver_id, ['@truck_id'] = data.truck_id});
 		openUI(source,true)
 	end
 end)
@@ -462,15 +450,15 @@ AddEventHandler("truck_logistics:withdrawMoney",function()
 		local xPlayer = QBCore.Functions.GetPlayer(source)
 		local user_id = xPlayer.PlayerData.citizenid
 		if user_id then
-			local sql = exports['ghmattimysql']:execute("SELECT * FROM `trucker_loans` WHERE user_id = @user_id", {['@user_id'] = user_id}, function(sql)
+			local sql = exports.oxmysql:fetch("SELECT * FROM `trucker_loans` WHERE user_id = @user_id", {['@user_id'] = user_id}, function(sql)
 				local query = sql[1];
 				if not query or not query.remaining_amount or query.remaining_amount <= 0 then
-					local sql = exports['ghmattimysql']:execute("SELECT money FROM `trucker_users` WHERE user_id = @user_id", {['@user_id'] = user_id}, function(sql2)
+					local sql = exports.oxmysql:fetch("SELECT money FROM `trucker_users` WHERE user_id = @user_id", {['@user_id'] = user_id}, function(sql2)
 						local query = sql2[1];
 						local amount = tonumber(query.money)
 						if amount and amount > 0 then
 							local sql = "UPDATE `trucker_users` SET money = 0 WHERE user_id = @user_id";
-							exports['ghmattimysql']:execute(sql, {['@user_id'] = user_id});
+							exports.oxmysql:execute(sql, {['@user_id'] = user_id});
 							xPlayer.Functions.AddMoney('bank', amount)
 							TriggerClientEvent("QBCore:Notify",source, Lang[Config.lang]['money_withdrawn'], "success")
 							openUI(source,true)
@@ -518,7 +506,7 @@ AddEventHandler("truck_logistics:loan",function(data)
 		local xPlayer = QBCore.Functions.GetPlayer(source)
 		local user_id = xPlayer.PlayerData.citizenid
 		if user_id then
-			local sql = exports['ghmattimysql']:execute("SELECT * FROM `trucker_loans` WHERE user_id = @user_id", {['@user_id'] = user_id}, function (result)
+			local sql = exports.oxmysql:fetch("SELECT * FROM `trucker_loans` WHERE user_id = @user_id", {['@user_id'] = user_id}, function (result)
 			local query = result
 			local amount_loans = 0;
 			for k,v in pairs(query) do
@@ -527,7 +515,7 @@ AddEventHandler("truck_logistics:loan",function(data)
 			
 			if amount_loans + Config.emprestimos.valores[data.loan_id][1] <= getMaxEmprestimo(user_id) then
 				local sql = "INSERT INTO `trucker_loans` (user_id,loan,remaining_amount,day_cost,taxes_on_day) VALUES (@user_id,@loan,@remaining_amount,@day_cost,@taxes_on_day);";
-				exports['ghmattimysql']:execute(sql, {['@user_id'] = user_id, ['@loan'] = Config.emprestimos.valores[data.loan_id][1], ['@remaining_amount'] = Config.emprestimos.valores[data.loan_id][1], ['@day_cost'] = Config.emprestimos.valores[data.loan_id][2], ['@taxes_on_day'] = Config.emprestimos.valores[data.loan_id][3]});
+				exports.oxmysql:execute(sql, {['@user_id'] = user_id, ['@loan'] = Config.emprestimos.valores[data.loan_id][1], ['@remaining_amount'] = Config.emprestimos.valores[data.loan_id][1], ['@day_cost'] = Config.emprestimos.valores[data.loan_id][2], ['@taxes_on_day'] = Config.emprestimos.valores[data.loan_id][3]});
 				giveTruckerMoney(user_id,Config.emprestimos.valores[data.loan_id][1])
 				TriggerClientEvent("QBCore:Notify",source, Lang[Config.lang]['loan'], "success")
 				openUI(source,true)
@@ -546,11 +534,11 @@ AddEventHandler("truck_logistics:payLoan",function(data)
 	local xPlayer = QBCore.Functions.GetPlayer(source)
 	local user_id = xPlayer.PlayerData.citizenid
 	if user_id then
-		local sql = exports['ghmattimysql']:execute("SELECT * FROM `trucker_loans` WHERE id = @id",{['@id'] = data.loan_id}, function(result)
+		local sql = exports.oxmysql:fetch("SELECT * FROM `trucker_loans` WHERE id = @id",{['@id'] = data.loan_id}, function(result)
 			local query = result[1]
 				if tryGetTruckerMoney(user_id, query.remaining_amount) then
 					local sql = "DELETE FROM `trucker_loans` WHERE id = @id;";
-					exports['ghmattimysql']:execute(sql, {['@id'] = data.loan_id});
+					exports.oxmysql:execute(sql, {['@id'] = data.loan_id});
 					TriggerClientEvent("QBCore:Notify",source, Lang[Config.lang]['loan_paid'], "success")
 					openUI(source,true)
 				else
@@ -571,7 +559,7 @@ AddEventHandler("truck_logistics:finishJob",function(data,distance,reward,truck_
 		local bonus = 0
 		local bonus_exp = 0
 		local level = getPlayerLevel(user_id)
-		local sql = exports['ghmattimysql']:execute("SELECT * FROM `trucker_users` WHERE user_id = @user_id", {['@user_id'] = user_id}, function(result)
+		local sql = exports.oxmysql:fetch("SELECT * FROM `trucker_users` WHERE user_id = @user_id", {['@user_id'] = user_id}, function(result)
 			local query = result[1]
 				if data.fragile > 0 then
 					bonus = bonus + reward*(Config.bonus['fragile']['dinheiro'][query.fragile]/100)
@@ -597,17 +585,17 @@ AddEventHandler("truck_logistics:finishJob",function(data,distance,reward,truck_
 
 		if truck_data.truck_id then
 			local sql = "UPDATE `trucker_trucks` SET engine = @engine, transmission = @transmission, body = @body, wheels = wheels - @wheels WHERE truck_id = @truck_id";
-			exports['ghmattimysql']:execute(sql, {['@engine'] = truck_engine, ['@body'] = truck_body, ['@transmission'] = math.floor((truck_engine + truck_body)/2), ['@wheels'] = tonumber(string.format("%.2f", distance))*10, ['@truck_id'] = truck_data.truck_id});
+			exports.oxmysql:execute(sql, {['@engine'] = truck_engine, ['@body'] = truck_body, ['@transmission'] = math.floor((truck_engine + truck_body)/2), ['@wheels'] = tonumber(string.format("%.2f", distance))*10, ['@truck_id'] = truck_data.truck_id});
 		end
 		local sql = "UPDATE `trucker_users` SET total_earned = total_earned + @reward, finished_deliveries = finished_deliveries + 1, traveled_distance = traveled_distance + @distance, exp = exp + @exp_amount WHERE user_id = @user_id";
-		exports['ghmattimysql']:execute(sql, {['@reward'] = received_amount, ['@distance'] = tonumber(string.format("%.2f", distance)), ['@exp_amount'] = received_xp, ['@user_id'] = user_id});
+		exports.oxmysql:execute(sql, {['@reward'] = received_amount, ['@distance'] = tonumber(string.format("%.2f", distance)), ['@exp_amount'] = received_xp, ['@user_id'] = user_id});
 
 		giveTruckerMoney(user_id,received_amount)
 		TriggerClientEvent("QBCore:Notify",source, Lang[Config.lang]['reward']:format(tostring(received_amount),tostring(trailer_body*100),tostring(received_xp)), "success")
 		local level2 = getPlayerLevel(user_id)
 		if level2 - level > 0 then
 			local sql = "UPDATE `trucker_users` SET skill_points = skill_points + @skill WHERE user_id = @user_id";
-			exports['ghmattimysql']:execute(sql, {['@skill'] = (level2 - level), ['@user_id'] = user_id});
+			exports.oxmysql:execute(sql, {['@skill'] = (level2 - level), ['@user_id'] = user_id});
 			SendWebhookMessage(Config.webhook,Lang[Config.lang]['logs_skill']:format((level2 - level),user_id..os.date("\n["..Lang[Config.lang]['logs_date'].."]: %d/%m/%Y ["..Lang[Config.lang]['logs_hour'].."]: %H:%M:%S")))
 		end
 		SendWebhookMessage(Config.webhook,Lang[Config.lang]['logs_finish']:format(tostring(received_amount),tostring(received_xp),user_id..os.date("\n["..Lang[Config.lang]['logs_date'].."]: %d/%m/%Y ["..Lang[Config.lang]['logs_hour'].."]: %H:%M:%S")))
@@ -622,7 +610,7 @@ AddEventHandler("truck_logistics:updateTruckStatus",function(truck_data,truck_en
 	if user_id then
 		if truck_data.truck_id then
 			local sql = "UPDATE `trucker_trucks` SET engine = @engine, transmission = @transmission, body = @body WHERE truck_id = @truck_id";
-			exports['ghmattimysql']:execute(sql, {['@engine'] = truck_engine, ['@body'] = truck_body, ['@transmission'] = math.floor((truck_engine + truck_body)/2), ['@truck_id'] = truck_data.truck_id});
+			exports.oxmysql:execute(sql, {['@engine'] = truck_engine, ['@body'] = truck_body, ['@transmission'] = math.floor((truck_engine + truck_body)/2), ['@truck_id'] = truck_data.truck_id});
 		end
 	end
 end)
@@ -634,7 +622,7 @@ AddEventHandler("truck_logistics:deleteContract",function(id)
 	local user_id = xPlayer.PlayerData.citizenid
 	if user_id then
 		local sql = "DELETE FROM `trucker_available_contracts` WHERE contract_id = @id;";
-		exports['ghmattimysql']:execute(sql, {['@id'] = id});
+		exports.oxmysql:execute(sql, {['@id'] = id});
 		local users = QBCore.Functions.GetPlayers()
 		for k,v in pairs(users) do
 			if isOpen[v] then
@@ -646,18 +634,18 @@ end)
 
 function giveTruckerMoney(user_id,amount)
 	local sql = "UPDATE `trucker_users` SET money = money + @amount WHERE user_id = @user_id";
-	exports['ghmattimysql']:execute(sql, {['@amount'] = amount, ['@user_id'] = user_id});
+	exports.oxmysql:execute(sql, {['@amount'] = amount, ['@user_id'] = user_id});
 end
 
 
 function tryGetTruckerMoney(user_id,amount)
 	local queryMoney
-	local sql = exports['ghmattimysql']:execute("SELECT money FROM `trucker_users` WHERE user_id = @user_id", {['@user_id'] = user_id}, function(result)
+	local sql = exports.oxmysql:fetch("SELECT money FROM `trucker_users` WHERE user_id = @user_id", {['@user_id'] = user_id}, function(result)
 		queryMoney = result[1]; end)
 		Wait(250) -- Esperamos 250ms segundo para que se actualize la variable, si no dara error de nil value
 		if tonumber(queryMoney.money) >= amount then
 			local sql = "UPDATE `trucker_users` SET money = @amount WHERE user_id = @user_id";
-			exports['ghmattimysql']:execute(sql, {['@amount'] = (tonumber(queryMoney.money) - amount), ['@user_id'] = user_id});
+			exports.oxmysql:execute(sql, {['@amount'] = (tonumber(queryMoney.money) - amount), ['@user_id'] = user_id});
 			return true
 		else
 			return false
@@ -677,7 +665,7 @@ end
 
 function getPlayerLevel(user_id)
 	local queryLevel
-	local sql = exports['ghmattimysql']:execute("SELECT exp FROM `trucker_users` WHERE user_id = @user_id", {['@user_id'] = user_id}, function (result)
+	local sql = exports.oxmysql:fetch("SELECT exp FROM `trucker_users` WHERE user_id = @user_id", {['@user_id'] = user_id}, function (result)
 	queryLevel = result[1]; end)
 	Wait(250) -- Esperamos 250ms segundo para que se actualize la variable, si no dara error de nil value
 	local level = 0
@@ -703,36 +691,36 @@ function openUI(source, reset)
 		if user_id then
 			-- Busca os dados do usuário
 			local sql = "SELECT * FROM `trucker_users` WHERE user_id = '" .. user_id .. "'";
-			users_data = exports['ghmattimysql']:execute(sql,{}, function(users_data)
+			users_data = exports.oxmysql:execute(sql,{}, function(users_data)
             query.trucker_users = users_data[1] or nil
 				if query.trucker_users == nil then
 					local sql = "INSERT INTO `trucker_users` (user_id) VALUES (@user_id);";
-					exports['ghmattimysql']:execute(sql, {['@user_id'] = user_id});
-					local sql2 = exports['ghmattimysql']:execute("SELECT * FROM `trucker_users` WHERE user_id = @user_id", {['@user_id'] = user_id}, function (sql2);
+					exports.oxmysql:execute(sql, {['@user_id'] = user_id});
+					local sql2 = exports.oxmysql:fetch("SELECT * FROM `trucker_users` WHERE user_id = @user_id", {['@user_id'] = user_id}, function (sql2);
 					query.trucker_users = sql2[1];
 					end)
 				else
 					if query.trucker_users.loan_notify == 1 then
 						local sql = "UPDATE `trucker_users` SET loan_notify = 0 WHERE user_id = @user_id";
-						exports['ghmattimysql']:execute(sql, {['@user_id'] = user_id});
+						exports.oxmysql:execute(sql, {['@user_id'] = user_id});
 						TriggerClientEvent("QBCore:Notify",source, Lang[Config.lang]['no_loan_money'], "primary")
 					end
 				end
 			end)
 			-- Busca os contratos
-			local sql = exports['ghmattimysql']:execute("SELECT * FROM `trucker_available_contracts`", function(result)
+			local sql = exports.oxmysql:fetch("SELECT * FROM `trucker_available_contracts`", function(result)
 			query.trucker_available_contracts = result
 			
 			-- Busca os caminhões
-			local sql2 = exports['ghmattimysql']:execute("SELECT * FROM `trucker_trucks` WHERE user_id = @user_id", {['@user_id'] = user_id}, function(result2);
+			local sql2 = exports.oxmysql:fetch("SELECT * FROM `trucker_trucks` WHERE user_id = @user_id", {['@user_id'] = user_id}, function(result2);
 			query.trucker_trucks = result2
 			
 			-- Busca os motoristas
-			local sql3 =  exports['ghmattimysql']:execute("SELECT * FROM `trucker_drivers` WHERE user_id = @user_id OR user_id IS NULL", {['@user_id'] = user_id}, function(result3)
+			local sql3 =  exports.oxmysql:fetch("SELECT * FROM `trucker_drivers` WHERE user_id = @user_id OR user_id IS NULL", {['@user_id'] = user_id}, function(result3)
 			query.trucker_drivers = result3
 			
 			-- Busca os emprestimos
-			local sql4 = exports['ghmattimysql']:execute("SELECT * FROM `trucker_loans` WHERE user_id = @user_id", {['@user_id'] = user_id}, function(result4)
+			local sql4 = exports.oxmysql:fetch("SELECT * FROM `trucker_loans` WHERE user_id = @user_id", {['@user_id'] = user_id}, function(result4)
 			query.trucker_loans = result4
 			
 			-- Busca as configs necessárias
