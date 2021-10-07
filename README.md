@@ -9,3 +9,5 @@ Default Trucks in Config.lua
 >Credits to the original author for the script.
 >
 >DO NOT SELL THIS SCRIPT, ITS FREE FOR QBCORE COMMUNITY
+
+# All I've done is convert this to oxysql from ghatti
